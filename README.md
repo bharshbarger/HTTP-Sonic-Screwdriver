@@ -5,15 +5,18 @@ A general purpose HTTP post timing tool
 
 ./HSS.py -h
 
-usage: HSS.py [-h] [-u URL] [-p PASSWORD] [-d DELAY] [-P POSTDATA] [-e ENCODE]
+usage: HSS.py [-h] [-u URL] [-p PASSWORD] [-d DELAY] [-P POSTDATA] [-e ENCODE] [-v]
 
-              [-v]
 
 optional arguments:
 
-  -h, --help            show this help message and exit
+  -h, --help            
+
+      show this help message and exit
   
-  -u URL, --url URL     The URL you want to test.
+  -u URL, --url URL     
+  
+        The URL you want to test.
   
   -p PASSWORD, --password PASSWORD
   
@@ -39,4 +42,5 @@ optional arguments:
   
                         Optionally URL encode all POST data
                         
-  -v, --verbose         enable verbosity
+  -v, --verbose         
+      enable verbosity
