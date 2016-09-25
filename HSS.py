@@ -71,7 +71,7 @@ def main():
 		if args.verbose is True:print '[i] Url entered is: '.join(url)+'\n'
 
 	if args.password is None:
-		userPass = 'foo'
+		userPass = ''
 
 	if args.password is not None:
 		userPass = ''.join(args.password)
