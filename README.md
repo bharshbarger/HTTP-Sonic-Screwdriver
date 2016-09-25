@@ -2,6 +2,8 @@
 
 A general purpose HTTP post timing tool
 
+Takes a username list in a file (users.txt) and an optional password (default is '') and a POST parameter with the username and password values replaced with xux and xpx, respectively. Once run it will return how long each response took for each POST request. 
+
 
 ./HSS.py -h
 
