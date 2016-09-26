@@ -49,13 +49,20 @@ def main():
 
 	print 'HSS started at: '+(time.strftime("%d/%m/%Y - %H:%M:%S"))
 
+
 	if args.url is None: 
 		parser.print_help()
 		sys.exit()
 
-	if args.verb is not None:
-		if args.verb is 'PUT':print args.verb
+	httpVerbs=['get', 'post', 'put', 'delete']
+	verb = 'post'
 
+	if args.verb is not None:
+		for a in args.verb:
+			for h in httpVerbs:
+				if str(a.lower()) == str(h):
+					print 'you entered '+ str(a.lower())
+					verb = str(a.lower())
 	else:
 		print '[-] Verb not specified, using POST'
 	
@@ -86,7 +93,7 @@ def main():
 		userPass = ''.join(args.password)
 		postdata = postdata.replace('xpx', str(userPass))
 
-	def request(args, userPass, postdata, delay):
+	def request(args, userPass, postdata, delay, verb):
 		
 		userList=[]
 
@@ -97,11 +104,14 @@ def main():
 			#for each line find its index and value
 			for i, userID in enumerate(userList):
 
+				#finx xux in your string
 				if postdata.find('xux'):
 					#replace the string with the user id at the first i value
 					postdata=postdata.replace('xux', str(userList[i]))
 
+				#find xpx in the string
 				if postdata.find('xpx'):
+					#replace xpx with the the password specified otherwise its blank
 					postdata=postdata.replace('xpx', str(userPass))
 				
 				if postdata.find(str(userList[i-1])):
@@ -114,32 +124,39 @@ def main():
 				context = ssl._create_unverified_context()
 
 
-				
+				#loop through urls as potentially you'd want to test more than 1
 				for u in url:
 					try:
-						print url
-						#response = urllib.urlopen(''.join(url), postdata, context=context)
+						#set verbosity to print the url
+						if args.verbose is True:print '[+] Testing '+url
+						#record statt time
 						startTime=time.time()
-						response = requests.post(u,str(postdata))
+						#test for verb. this probably could be done better
+						if verb == 'post':response = requests.post(u,str(postdata))
+						if verb == 'get':response = requests.get(u)
+						if verb == 'put':response = requests.put(u)
+						if verb == 'delete':response = requests.delete(u)
+						#record elapsed time
 						elapsedTime = str(round((time.time()-startTime)*1000.0))
-						#if args.verbose is True:print str(response.read())
+						#if verbose print the response from the server. probabaly better to write to a file?
 						if args.verbose is True:print str(response.text)
+						#return the elapsed time with the user id and password 
 						print str(elapsedTime)+'ms'+' - '+str(userID)+':'+str(userPass)+' '
-					except requests.exceptions.RequestException as e:  # This is the correct syntax
+					except requests.exceptions.RequestException as e:
 					    print e
 					    sys.exit(1)
 
 
-				#print timing result with userid and pass
+
 				
 				#if verbose print the post data too
 				if args.verbose is True: print '[i] POST data: '+str(postdata)
-				#throttle
+				#throttle based on delay arg
 				time.sleep(delay)
 			
 
 
-	request(args, userPass, postdata, delay)
+	request(args, userPass, postdata, delay, verb)
 
 if __name__ == '__main__':
     main()
