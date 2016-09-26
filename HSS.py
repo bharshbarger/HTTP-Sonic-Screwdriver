@@ -94,6 +94,7 @@ def main():
 		postdata = postdata.replace('xpx', str(userPass))
 
 	def request(args, userPass, postdata, delay, verb):
+		#http://docs.python-requests.org/en/master/user/quickstart/
 		
 		userList=[]
 
@@ -128,20 +129,20 @@ def main():
 				for u in url:
 					try:
 						#set verbosity to print the url
-						if args.verbose is True:print '[+] Testing '+url
+						if args.verbose is True:print '[+] Testing '+ str(u)
 						#record statt time
 						startTime=time.time()
 						#test for verb. this probably could be done better
 						if verb == 'post':response = requests.post(u,str(postdata))
-						if verb == 'get':response = requests.get(u)
+						if verb == 'get':response = requests.get(u) #basic auth needs a header Authorization: Basic 
 						if verb == 'put':response = requests.put(u)
 						if verb == 'delete':response = requests.delete(u)
 						#record elapsed time
 						elapsedTime = str(round((time.time()-startTime)*1000.0))
 						#if verbose print the response from the server. probabaly better to write to a file?
-						if args.verbose is True:print str(response.text)
-						#return the elapsed time with the user id and password 
-						print str(elapsedTime)+'ms'+' - '+str(userID)+':'+str(userPass)+' '
+						if args.verbose is True:print str(response.headers) #or response.text for full
+						#return the elapsed time with the user id and password and status code
+						print 'HTTP '+str(response.status_code)+' '+"{:<1}".format(str(elapsedTime))+'ms'+' '+str(userID)+':'+str(userPass)+' '
 					except requests.exceptions.RequestException as e:
 					    print e
 					    sys.exit(1)
