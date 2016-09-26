@@ -6,6 +6,7 @@
 
 import argparse
 import urllib
+import requests
 import time
 import ssl
 import sys
@@ -18,8 +19,9 @@ def main():
 	parser.add_argument('-p', '--password', nargs = 1, help = 'The password you want to test, default is null')
 	parser.add_argument('-d', '--delay', nargs =1, help = 'Delay in seconds to rate limit requests. Default is 2 seconds')
 	parser.add_argument('-P', '--postdata', nargs = 1, help='The POST data string to send, contained in single quotes.\nReplace parameter values with a xux for username and xpx for password. \nExample: "User=xux&Password=xpx&Lang=en"')
-	parser.add_argument('-e', '--encode', help='Optionally URL encode all POST data')
+	parser.add_argument('-e', '--encode', help='Optionally URL encode all POST data', action = 'store_true')
 	parser.add_argument('-v', '--verbose', help='enable verbosity', action = 'store_true')
+	parser.add_argument('-V', '--verb', nargs=1,help='which http verb to use GET, POST, PUT, DELETE')
 	args = parser.parse_args()
 
 	if args.verbose is True:
@@ -48,12 +50,19 @@ def main():
 	print 'HSS started at: '+(time.strftime("%d/%m/%Y - %H:%M:%S"))
 
 	if args.url is None: 
-		print 'No URL entered, exiting! use -h for help\n'
+		parser.print_help()
 		sys.exit()
+
+	if args.verb is not None:
+		if args.verb is 'PUT':print args.verb
+
+	else:
+		print '[-] Verb not specified, using POST'
+	
 
 	if args.postdata is None:
 		postdata = ''
-		print '[-] No POST data entered! Exiting! Use -h for help\n'
+		print '\n[-] No POST data entered! Exiting! Use -h for help\n'
 		sys.exit()
 	else:
 		postdata = ''.join(args.postdata)
@@ -98,16 +107,31 @@ def main():
 				if postdata.find(str(userList[i-1])):
 					postdata=postdata.replace(str(userList[i-1]),str(userList[i]))
 
+				if args.encode is True:
+					postdata = urllib.urlencode(str(postdata))
+
 				#add SSL context to handle certs
 				context = ssl._create_unverified_context()
-				#log start time
-				startTime=time.time()
-				#send POST
-				response = urllib.urlopen(''.join(url), postdata, context=context)
-				if args.verbose is True:print str(response.read())
+
+
+				
+				for u in url:
+					try:
+						print url
+						#response = urllib.urlopen(''.join(url), postdata, context=context)
+						startTime=time.time()
+						response = requests.post(u,str(postdata))
+						elapsedTime = str(round((time.time()-startTime)*1000.0))
+						#if args.verbose is True:print str(response.read())
+						if args.verbose is True:print str(response.text)
+						print str(elapsedTime)+'ms'+' - '+str(userID)+':'+str(userPass)+' '
+					except requests.exceptions.RequestException as e:  # This is the correct syntax
+					    print e
+					    sys.exit(1)
+
 
 				#print timing result with userid and pass
-				print str(round((time.time()-startTime)*1000.0))+'ms'+' - '+str(userID)+':'+str(userPass)+' '
+				
 				#if verbose print the post data too
 				if args.verbose is True: print '[i] POST data: '+str(postdata)
 				#throttle
