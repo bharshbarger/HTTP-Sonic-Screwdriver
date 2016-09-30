@@ -5,12 +5,12 @@
 #By @arbitrary_code
 
 import argparse
-import urllib
+#import urllib
 import requests
 import time
 import ssl
 import sys
-
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 def main():
 
@@ -19,9 +19,11 @@ def main():
 	parser.add_argument('-p', '--password', nargs = 1, help = 'The password you want to test, default is null')
 	parser.add_argument('-d', '--delay', nargs =1, help = 'Delay in seconds to rate limit requests. Default is 2 seconds')
 	parser.add_argument('-P', '--postdata', nargs = 1, help='The POST data string to send, contained in single quotes.\nReplace parameter values with a xux for username and xpx for password. \nExample: "User=xux&Password=xpx&Lang=en"')
+	#parser.add_argument('-G'. '--getdata', nargs = 1, help = 'Data to use in the GET request')
 	parser.add_argument('-e', '--encode', help='Optionally URL encode all POST data', action = 'store_true')
 	parser.add_argument('-v', '--verbose', help='enable verbosity', action = 'store_true')
-	parser.add_argument('-V', '--verb', nargs=1,help='which http verb to use GET, POST, PUT, DELETE')
+	parser.add_argument('-V', '--verb', nargs=1,help='which http verb to use GET, POST')
+	parser.add_argument('-x', '--proxy', nargs=1, help='specify a proxy')
 	args = parser.parse_args()
 
 	if args.verbose is True:
@@ -56,6 +58,7 @@ def main():
 
 	httpVerbs=['get', 'post', 'put', 'delete']
 	verb = 'post'
+	postdata=''
 
 	if args.verb is not None:
 		for a in args.verb:
@@ -66,13 +69,22 @@ def main():
 	else:
 		print '[-] Verb not specified, using POST'
 	
+	if args.verb is not None:
+		for a in args.verb:
+			if str(a.lower()) == 'post':
+				if args.postdata is None:
+					postdata = ''
+					print '\n[-] No POST data entered! Exiting! Use -h for help\n'
+					sys.exit()
+				else:
+					postdata = ''.join(args.postdata)
+			'''if str(a.lower()) == 'get':
+				if args.getdata is None:
+					getdata = ''
+					print '\n[-] No GET data entered! Exiting! Use -h for help\n'
+					sys.exit()'''
 
-	if args.postdata is None:
-		postdata = ''
-		print '\n[-] No POST data entered! Exiting! Use -h for help\n'
-		sys.exit()
-	else:
-		postdata = ''.join(args.postdata)
+
 
 	if args.password is not None:
 		userPass = ''.join(args.password)
@@ -92,6 +104,21 @@ def main():
 	if args.password is not None:
 		userPass = ''.join(args.password)
 		postdata = postdata.replace('xpx', str(userPass))
+
+	#defaults
+	http_proxy = 'http://localhost:8080'
+	https_proxy = 'https://localhost:8080'
+
+	proxyDict = { 
+              "http"  : http_proxy, 
+              "https" : https_proxy, 
+            }
+
+	if args.proxy is not None:
+		#populate proxy from args
+		return
+	
+		
 
 	def request(args, userPass, postdata, delay, verb):
 		#http://docs.python-requests.org/en/master/user/quickstart/
@@ -121,9 +148,9 @@ def main():
 				if args.encode is True:
 					postdata = urllib.urlencode(str(postdata))
 
-				#add SSL context to handle certs
-				context = ssl._create_unverified_context()
 
+				#ignore ssl errors
+				requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 				#loop through urls as potentially you'd want to test more than 1
 				for u in url:
@@ -133,14 +160,17 @@ def main():
 						#record statt time
 						startTime=time.time()
 						#test for verb. this probably could be done better
-						if verb == 'post':response = requests.post(u,str(postdata))
+						#uses http://docs.python-requests.org/en/master/api/
+						if verb == 'post':response = requests.post(u,str(postdata),verify=False) #add ,proxies=proxyDict for proxy support
 						if verb == 'get':response = requests.get(u) #basic auth needs a header Authorization: Basic 
 						if verb == 'put':response = requests.put(u)
 						if verb == 'delete':response = requests.delete(u)
 						#record elapsed time
 						elapsedTime = str(round((time.time()-startTime)*1000.0))
 						#if verbose print the response from the server. probabaly better to write to a file?
-						if args.verbose is True:print str(response.headers) #or response.text for full
+						if args.verbose is True:
+							for h in response.headers:
+								print h #or response.text for full
 						#return the elapsed time with the user id and password and status code
 						print 'HTTP '+str(response.status_code)+' '+"{:<1}".format(str(elapsedTime))+'ms'+' '+str(userID)+':'+str(userPass)+' '
 					except requests.exceptions.RequestException as e:
