@@ -11,9 +11,15 @@ try:
 	import time
 	import ssl
 	import sys
+	import signal
 	from requests.packages.urllib3.exceptions import InsecureRequestWarning
 except Exception as e:
 	print('\n  [!] Import(s) failed! ' +str(e))
+
+
+def signal_handler(signal, frame):
+	print('You pressed Ctrl+C! Exiting...')
+	sys.exit(0)
 
 def main():
 
@@ -127,6 +133,8 @@ def main():
 
 	def request(args, userPass, postdata, delay, verb):
 		#http://docs.python-requests.org/en/master/user/quickstart/
+
+		signal.signal(signal.SIGINT, signal_handler)
 		
 		userList=[]
 
@@ -188,7 +196,7 @@ def main():
 
 				
 				#if verbose print the post data too
-				if args.verbose is True: print('[i] POST data: '+str(postdata))
+				if args.verbose is True: print('[i] POST data: %s' % str(postdata))
 				#throttle based on delay arg
 				time.sleep(delay)
 			
