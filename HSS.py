@@ -23,6 +23,7 @@ class Screwdriver():
 		self.httpsProxy = 'https://localhost:8080'
 		self.userList=[]
 		self.userPass=None
+		self.postData=None
 		self.url=None
 		self.verbose=False
 		self.encode=False
@@ -84,23 +85,15 @@ class Screwdriver():
 			parser.print_help()
 			sys.exit(0)
 
-		if args.verb is not None:
-			for v in args.verb:
-				for h in self.httpVerbs:
-					if str(v.lower()) == str(h):
-						print('you entered '+ str(v.lower()))
-						self.httpVerb = str(v.lower())
-		else:
+		if args.verb is None:
 			print('[-] Verb not specified, using POST')
-		
-		if args.verb is not None:
-			for v in args.verb:
-				if str(v.lower()) == 'post':
-					if args.postdata is None:
-						print('\n[-] No POST data entered! Exiting! Use -h for help\n')
-						sys.exit(0)
-					else:
-						self.postData = ''.join(args.postdata)
+
+		if args.postdata is None:
+			print('\n[-] No POST data entered! Exiting! Use -h for help\n')
+			sys.exit(0)
+		else:
+			self.postData = ''.join(args.postdata)
+			print(self.postData)
 
 
 		if args.password is not None:
@@ -120,9 +113,15 @@ class Screwdriver():
 
 		if args.password is not None:
 			self.userPass = ''.join(args.password)
-			self.postData = self.postData.replace('xpx', str(self.userPass))
+			
+		
+		if args.postdata is None:
+		
+			print('\n[!] Please enter some POST data\n')
+			parser.print_help()
+			sys.exit(0)
 
-		self.verbose=self.verbose
+		self.verbose=args.verbose
 
 		if args.proxy is not None:
 			#populate proxy from args
