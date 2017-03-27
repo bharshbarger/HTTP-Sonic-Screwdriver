@@ -1,16 +1,19 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
 #HSS.py a tool to generically throw usernames at a login or other form to look for timing attacks
+#maybe should implement a spider/scraper to find login forms as well to automate some
+#probably a good idea to do more than timing attacks. maybe automate user enum on response data as well (forgot pw link, etc)
 
 #By @arbitrary_code
-
-import argparse
-#import urllib
-import requests
-import time
-import ssl
-import sys
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+try:
+	import argparse
+	import requests
+	import time
+	import ssl
+	import sys
+	from requests.packages.urllib3.exceptions import InsecureRequestWarning
+except Exception as e:
+	print('\n  [!] Import(s) failed! ' +str(e))
 
 def main():
 
@@ -26,9 +29,11 @@ def main():
 	parser.add_argument('-x', '--proxy', nargs=1, help='specify a proxy')
 	args = parser.parse_args()
 
+	version='1.0-03272017'
+
 	if args.verbose is True:
 
-		print 
+		print(
 		'''
 		 _   _ _____ _____ ____    ____              _ 
 		| | | |_   _|_   _|  _ \  / ___|  ___  _ __ (_) ___ 	  
@@ -44,17 +49,17 @@ def main():
 															       
 		HSS - A Generic HTTP Timing Attack tool					   
 																   
-		v0.1 													   
+		%s 													   
 
-		'''
+		''' % version)
 		#print args
 
-	print 'HSS started at: '+(time.strftime("%d/%m/%Y - %H:%M:%S"))
+	print('HSS started at: %s' % (time.strftime("%d/%m/%Y - %H:%M:%S")))
 
 
 	if args.url is None: 
 		parser.print_help()
-		sys.exit()
+		sys.exit(0)
 
 	httpVerbs=['get', 'post', 'put', 'delete']
 	verb = 'post'
@@ -64,17 +69,17 @@ def main():
 		for a in args.verb:
 			for h in httpVerbs:
 				if str(a.lower()) == str(h):
-					print 'you entered '+ str(a.lower())
+					print('you entered '+ str(a.lower()))
 					verb = str(a.lower())
 	else:
-		print '[-] Verb not specified, using POST'
+		print('[-] Verb not specified, using POST')
 	
 	if args.verb is not None:
 		for a in args.verb:
 			if str(a.lower()) == 'post':
 				if args.postdata is None:
 					postdata = ''
-					print '\n[-] No POST data entered! Exiting! Use -h for help\n'
+					print('\n[-] No POST data entered! Exiting! Use -h for help\n')
 					sys.exit()
 				else:
 					postdata = ''.join(args.postdata)
@@ -96,7 +101,7 @@ def main():
 
 	for u in args.url:
 		url = args.url
-		if args.verbose is True:print '[i] Url entered is: '.join(url)+'\n'
+		if args.verbose is True:print ('[i] Url entered is: '.join(url)+'\n')
 
 	if args.password is None:
 		userPass = ''
@@ -156,7 +161,7 @@ def main():
 				for u in url:
 					try:
 						#set verbosity to print the url
-						if args.verbose is True:print '[+] Testing '+ str(u)
+						if args.verbose is True:print ('[+] Testing '+ str(u))
 						#record statt time
 						startTime=time.time()
 						#test for verb. this probably could be done better
@@ -170,18 +175,20 @@ def main():
 						#if verbose print the response from the server. probabaly better to write to a file?
 						if args.verbose is True:
 							for h in response.headers:
-								print h #or response.text for full
+								print (h) #or response.text for full
 						#return the elapsed time with the user id and password and status code
-						print 'HTTP '+str(response.status_code)+' '+"{:<1}".format(str(elapsedTime))+'ms'+' '+str(userID)+':'+str(userPass)+' '
+						print ('HTTP '+str(response.status_code)+\
+							' '+"{:<1}".format(str(elapsedTime))+'ms'+\
+							' '+str(userID)+':'+str(userPass)+' ')
 					except requests.exceptions.RequestException as e:
-					    print e
+					    print(e)
 					    sys.exit(1)
 
 
 
 				
 				#if verbose print the post data too
-				if args.verbose is True: print '[i] POST data: '+str(postdata)
+				if args.verbose is True: print('[i] POST data: '+str(postdata))
 				#throttle based on delay arg
 				time.sleep(delay)
 			
