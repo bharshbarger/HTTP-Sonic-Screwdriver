@@ -19,6 +19,7 @@ class Screwdriver():
 		self.httpVerbs=['get', 'post', 'put', 'delete']
 		self.httpVerb = 'post'
 		self.postData=None
+		self.cookieInput=None
 		self.httpProxy = 'http://localhost:8080'
 		self.httpsProxy = 'https://localhost:8080'
 		self.userList=[]
@@ -41,6 +42,7 @@ class Screwdriver():
 	def cmdargs(self):
 
 		parser = argparse.ArgumentParser()
+		parser.add_argument('-c', '--cookie', nargs=1, metavar='<cookieInput>', help='Optionally, specify cookie data')
 		parser.add_argument('-u', '--url', nargs = 1, metavar='http://www.foo.com/login' ,help = 'The URL you want to test.')
 		parser.add_argument('-p', '--password', nargs = 1, metavar='P@55w0rd!',help = 'The password you want to test, default is null')
 		parser.add_argument('-d', '--delay', nargs =1, metavar='2',help = 'Optionally set a delay in seconds to rate limit. Default is 2 seconds.')
@@ -113,6 +115,18 @@ class Screwdriver():
 
 		if args.password is not None:
 			self.userPass = ''.join(args.password)
+
+		if args.cookie is not None:
+			self.cookieInput = ''.join(args.cookie)
+		
+			cookieVal = self.cookieInput.split('=')[0]
+			cookieData = self.cookieInput.split('=')[1]
+
+			self.cookieData = {str(cookieVal):str(cookieData)}
+			print self.cookieData.items()
+
+
+
 			
 		
 		if args.postdata is None:
@@ -136,7 +150,7 @@ class Screwdriver():
 		
 		print('[i] Testing URL: %s ' % ''.join(self.url))
 		print('[i] Testing post data of: %s ' % self.postData)
-		print('Response Time    user:pass')
+		print('%-8s %-8s %-s'% ('Response', 'Time(ms)','user:pass'))
 
 		#open users.txt to read as object f
 		with open('users.txt','r') as f: 
@@ -174,7 +188,7 @@ class Screwdriver():
 						startTime=time.time()
 						#test for verb. this probably could be done better
 						#uses http://docs.python-requests.org/en/master/api/
-						if self.httpVerb == 'post':response = requests.post(u,str(self.postData),verify=False) #add ,proxies=proxyDict for proxy support
+						if self.httpVerb == 'post':response = requests.post(u,str(self.postData),cookies=self.cookieData,verify=False, proxies=self.proxyDict) #add ,proxies=proxyDict for proxy support
 						
 
 						if self.httpVerb == 'get':response = requests.get(u) #basic auth needs a header Authorization: Basic 
@@ -204,9 +218,9 @@ class Screwdriver():
 							#print(response.text) #dump all response content html
 
 						#return the elapsed time with the user id and password and status code
-						print ('HTTP '+str(response.status_code)+\
-							' '+"{:<1}".format(str(elapsedTime))+'ms'+\
-							' '+str(userID)+':'+str(self.userPass)+' ')
+						#print ('HTTP '+str(response.status_code)+' '+"{:<1}".format(str(elapsedTime))+'ms'+' '+str(userID)+':'+str(self.userPass)+' ')
+						print('HTTP %-3s %-8s %s : %s'% (str(response.status_code), str(elapsedTime), str(userID), str(self.userPass)) )
+
 					except requests.exceptions.RequestException as e:
 					    print(e)
 					    sys.exit(1)
