@@ -52,9 +52,10 @@ class Screwdriver():
 		parser.add_argument('-v', '--verbose', help='Optionally enable verbosity', action = 'store_true')
 		parser.add_argument('-V', '--verb', nargs=1, metavar='post',help='HTTP Verb to use')
 		parser.add_argument('-x', '--proxy', nargs=1, metavar='localhost:8080',help='Optionally specify a proxy')
+		parser.add_argument('-f', '--postfile', metavar='postdata.txt', help='POST data contained in a file')
 		args = parser.parse_args()
 
-		version='1.0-03272017'
+		version='1.0-04202017'
 
 		if self.verbose is True:
 
@@ -90,11 +91,29 @@ class Screwdriver():
 		if args.verb is None:
 			print('[i] Verb not specified, using POST')
 
-		if args.postdata is None:
-			print('\n[-] No POST data entered! Exiting! Use -h for help\n')
+
+		#check for post data in -P arg or file supplied in -f
+		#if both are blank
+		if args.postdata is None and args.postfile is None:
+			#tell the user and exit
+			print('\n[-] No POST data entered! Please use -P for inline or -f for a file containing data. Exiting! Use -h for help\n')
 			sys.exit(0)
+		#otherwise
 		else:
-			self.postData = ''.join(args.postdata)
+			#if -P has data
+			if args.postdata is not None:
+				#set post data with supplied arg value
+				self.postData = ''.join(args.postdata)
+
+			#if -f has data
+			if args.postfile is not None:
+				#open  to read as object f
+				with open(args.postfile,'r') as f: 
+					#read the contents into the userList dictionary
+					self.postData = ''.join(f.read().splitlines())
+					if args.verbose is True:print('postdata: \n %s' % self.postData)
+
+		
 			
 
 
@@ -124,22 +143,19 @@ class Screwdriver():
 
 			self.cookieData = {str(cookieVal):str(cookieData)}
 			print self.cookieData.items()
+		else:
+			self.cookieData = ''
 
-
-
-			
-		
-		if args.postdata is None:
-		
-			print('\n[!] Please enter some POST data\n')
-			parser.print_help()
-			sys.exit(0)
 
 		self.verbose=args.verbose
 
 		if args.proxy is not None:
-			#populate proxy from args
-			return args
+			self.httpProxy = args.proxy
+			self.httpsProxy = args.proxy
+		else:
+			self.httpProxy = ''
+			self.httpProxy = ''
+
 		
 			
 
@@ -188,16 +204,21 @@ class Screwdriver():
 						startTime=time.time()
 						#test for verb. this probably could be done better
 						#uses http://docs.python-requests.org/en/master/api/
-						if self.httpVerb == 'post':response = requests.post(u,str(self.postData),cookies=self.cookieData,verify=False, proxies=self.proxyDict) #add ,proxies=proxyDict for proxy support
+						if self.httpVerb == 'post':
+							response = requests.post(u,str(self.postData),cookies=self.cookieData,verify=False)
 						
 
-						if self.httpVerb == 'get':response = requests.get(u) #basic auth needs a header Authorization: Basic 
+						if self.httpVerb == 'get':
+							response = requests.get(u) #basic auth needs a header Authorization: Basic 
 						
 
-						if self.httpVerb == 'put':response = requests.put(u)
+						if self.httpVerb == 'put':
+							response = requests.put(u)
 						
 
-						if self.httpVerb == 'delete':response = requests.delete(u)
+						if self.httpVerb == 'delete':
+							response = requests.delete(u)
+						
 						#record elapsed time
 						elapsedTime = str(round((time.time()-startTime)*1000.0))
 
