@@ -142,7 +142,7 @@ class Screwdriver():
 			cookieData = self.cookieInput.split('=')[1]
 
 			self.cookieData = {str(cookieVal):str(cookieData)}
-			print self.cookieData.items()
+			print(self.cookieData.items())
 		else:
 			self.cookieData = ''
 
